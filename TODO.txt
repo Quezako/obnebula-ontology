@@ -1,0 +1,11 @@
+# quand on ajoute une nouveau groupe, il faut lui donner des tags principaux (en plus de leur type)
+# on ajoute ensuite des propriétés qui sont des tag group déjà existants.
+en fait, il faut différencier les groupes auxquels on ajoute des tags
+et les groupes auxquels on ajoute d'autre groupes
+c'est au groupe human qu'on ajoute lew new group bulma ou au new group bulma qu'on ajoute le groupe human ?
+ou il faut que la relation soit plate et non pas hierachique ?
+ou une autre approche ?
+
+probablement différencier ce qui est le référentiel, le backbone et ce qui est une instance piochée dans ce référentiel.
+référentiel : entity -> living -> animal -> human -> female
+instance : bulma <- female (avec héritage inversé : <- human <- animal, etc.)

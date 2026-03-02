@@ -15,6 +15,8 @@
       :on-add-tag="onAddTag"
       :on-remove="onRemove"
       :on-rename="onRename"
+      :on-alias="onAlias"
+      :resolve-node="resolveNode"
     />
   </VueDraggableNext>
   <div v-if="nodes.length === 0" class="empty">
@@ -36,6 +38,8 @@ interface Props {
   onAddTag: (parentId: string | null) => void;
   onRemove: (id: string) => void;
   onRename: (id: string, name: string) => void;
+  onAlias: (id: string) => void;
+  resolveNode: (id: string) => Node | null;
   allowedType?: Node['type'] | 'any';
 }
 

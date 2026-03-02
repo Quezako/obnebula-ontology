@@ -5,6 +5,9 @@ export interface TreeNode {
   name: string;
   type: NodeType;
   tagType?: string;
+  overrideFrom?: string;
+  aliasOf?: string;
+  hiddenTagIds?: string[];
   tags: TreeNode[];
   children: TreeNode[];
 }
@@ -20,6 +23,9 @@ export const createNode = (type: NodeType, name?: string, tagType?: string): Tre
   name: name ?? (type === 'group' ? '' : 'Nouveau tag'),
   type,
   tagType: type === 'tag' ? tagType ?? 'Main' : undefined,
+  overrideFrom: undefined,
+  aliasOf: undefined,
+  hiddenTagIds: [],
   tags: [],
   children: [],
 });
@@ -224,44 +230,15 @@ export const createSampleTree = (): TreeNode[] => [
             id: '15',
             name: '',
             type: 'group',
+            aliasOf: '5',
+            hiddenTagIds: ['30'],
             tags: [
               {
-                id: '16',
-                name: 'Human',
-                type: 'tag',
-                tagType: 'Main',
-                tags: [],
-                children: [],
-              },
-              {
                 id: '70',
-                name: '2 eyes',
+                name: '1 arm',
                 type: 'tag',
-                tagType: 'Trait',
-                tags: [],
-                children: [],
-              },
-              {
-                id: '71',
-                name: '2 legs',
-                type: 'tag',
-                tagType: 'Trait',
-                tags: [],
-                children: [],
-              },
-              {
-                id: '72',
-                name: '2 arms',
-                type: 'tag',
-                tagType: 'Trait',
-                tags: [],
-                children: [],
-              },
-              {
-                id: '73',
-                name: '1 mouth',
-                type: 'tag',
-                tagType: 'Trait',
+                tagType: 'Override',
+                overrideFrom: '2 arms',
                 tags: [],
                 children: [],
               },
@@ -271,16 +248,8 @@ export const createSampleTree = (): TreeNode[] => [
                 id: '17',
                 name: '',
                 type: 'group',
-                tags: [
-                  {
-                    id: '18',
-                    name: 'Female',
-                    type: 'tag',
-                    tagType: 'Main',
-                    tags: [],
-                    children: [],
-                  },
-                ],
+                aliasOf: '7',
+                tags: [],
                 children: [
                 ],
               },

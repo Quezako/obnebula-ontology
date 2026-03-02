@@ -51,6 +51,180 @@ body {
   padding: 20px;
 }
 
+.graph {
+  margin-top: 16px;
+}
+
+.graph__header {
+  margin-bottom: 16px;
+}
+
+.graph__title {
+  margin: 0;
+  font-size: 18px;
+}
+
+.graph__subtitle {
+  margin: 6px 0 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.graph__canvas {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.graph__legend {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.graph__columns {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 16px;
+}
+
+.graph__column {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
+  min-height: 320px;
+}
+
+.graph__column--relations {
+  background: #f1f5f9;
+}
+
+.graph__column-title {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.graph__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.graph__card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.06);
+}
+
+.graph__card--tag {
+  border-left: 3px solid #38bdf8;
+}
+
+.graph__card-title {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.graph__card-sub {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.graph__card-tags {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.graph__chip {
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid #e0e7ff;
+}
+
+.graph__card-pill {
+  margin-left: 6px;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #fde68a;
+  color: #92400e;
+}
+
+.graph__relation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 8px 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.graph__relation-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px dashed #e2e8f0;
+}
+
+.graph__relation-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.graph__relation-text {
+  font-size: 12px;
+  color: #111827;
+}
+
+.graph__badge {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-weight: 700;
+  text-transform: lowercase;
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.graph__badge--is-a {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.graph__badge--instance {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.graph__badge--alias {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.graph__badge--override {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
 .toolbar {
   display: flex;
   gap: 8px;
@@ -108,6 +282,37 @@ body {
 .node__type--tag {
   background: #d1fae5;
   color: #065f46;
+}
+
+.node__tag-type {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.node__alias {
+  margin-left: 8px;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.node__alias-main {
+  margin-left: 8px;
+  font-size: 11px;
+  color: #1f2937;
+  background: #e0f2fe;
+  border-radius: 999px;
+  padding: 2px 6px;
+}
+
+.node__tags-summary {
+  margin-left: 8px;
+  font-size: 12px;
+  color: #4b5563;
+  font-weight: 500;
 }
 
 .node__actions {

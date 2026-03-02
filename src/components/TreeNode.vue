@@ -11,10 +11,19 @@
           <input v-model="draft" class="input" @keydown.enter="save" @blur="save" />
         </template>
         <template v-else>
-          <span v-if="node.type === 'group'">ID: {{ node.id }}</span>
+          <span v-if="node.type === 'group'">
+            ID: {{ node.id }}
+            <span v-if="node.aliasOf" class="node__alias">Alias → {{ node.aliasOf }}</span>
+            <span v-if="mainTagLabel" class="node__alias-main">Main: {{ mainTagLabel }}</span>
+          </span>
           <span v-else>
-            {{ node.name }}
-            <span class="node__tag-type">({{ node.tagType ?? 'Main' }})</span>
+            <template v-if="node.tagType === 'Override' && node.overrideFrom">
+              {{ node.overrideFrom }} → {{ node.name }}
+            </template>
+            <template v-else>
+              {{ node.name }}
+              <span class="node__tag-type">({{ node.tagType ?? 'Main' }})</span>
+            </template>
           </span>
         </template>
         <span :class="['node__type', node.type === 'tag' ? 'node__type--tag' : '']">
@@ -24,6 +33,7 @@
       <div class="node__actions">
         <button v-if="node.type === 'group'" @click="onAddGroup(node.id)">+ Groupe</button>
         <button v-if="node.type === 'group'" @click="onAddTag(node.id)">+ Tag</button>
+        <button v-if="node.type === 'group'" @click="onAlias(node.id)">Alias</button>
         <button v-if="node.type === 'tag'" @click="startEdit">Renommer</button>
         <button @click="onRemove(node.id)">Supprimer</button>
       </div>
@@ -32,17 +42,22 @@
     <div v-if="node.type === 'group' && expanded" class="node__children">
       <div class="node__tags">
         <button class="button button--ghost" @click="toggleTags">
-          {{ tagsExpanded ? '▾' : '▸' }} Tags ({{ node.tags.length }})
+          {{ tagsExpanded ? '▾' : '▸' }} Tags ({{ displayTags.length }})
         </button>
+        <span v-if="!tagsExpanded && tagSummary" class="node__tags-summary">
+          {{ tagSummary }}
+        </span>
         <div v-if="tagsExpanded">
           <TreeView
-            :nodes="node.tags"
+            :nodes="displayTags"
             :parent="node"
             :depth="depth + 1"
             :on-add-group="onAddGroup"
             :on-add-tag="onAddTag"
             :on-remove="onRemove"
             :on-rename="onRename"
+            :on-alias="onAlias"
+            :resolve-node="resolveNode"
             allowed-type="tag"
           />
         </div>
@@ -55,6 +70,8 @@
         :on-add-tag="onAddTag"
         :on-remove="onRemove"
         :on-rename="onRename"
+        :on-alias="onAlias"
+        :resolve-node="resolveNode"
         allowed-type="group"
       />
     </div>
@@ -73,24 +90,64 @@ interface Props {
   onAddTag: (parentId: string | null) => void;
   onRemove: (id: string) => void;
   onRename: (id: string, name: string) => void;
+  onAlias: (id: string) => void;
+  resolveNode: (id: string) => Node | null;
 }
 
 const props = defineProps<Props>();
 
 const expanded = ref(true);
-const tagsExpanded = ref(true);
+const tagsExpanded = ref(false);
 const editing = ref(false);
 const draft = ref(props.node.name);
 
 const groupColor = (level: number) => {
-  const start = { r: 239, g: 68, b: 68 };
-  const end = { r: 59, g: 130, b: 246 };
-  const ratio = Math.min(level / 8, 1);
-  const r = Math.round(start.r + (end.r - start.r) * ratio);
-  const g = Math.round(start.g + (end.g - start.g) * ratio);
-  const b = Math.round(start.b + (end.b - start.b) * ratio);
-  return `rgba(${r}, ${g}, ${b}, 0.12)`;
+  const palette = [
+    'rgba(239, 68, 68, 0.28)',
+    'rgba(217, 70, 239, 0.28)',
+    'rgba(139, 92, 246, 0.28)',
+    'rgba(59, 130, 246, 0.28)',
+  ];
+  const index = Math.min(level, palette.length - 1);
+  return palette[index];
 };
+
+const aliasTarget = computed(() => {
+  if (!props.node.aliasOf) {
+    return null;
+  }
+  return props.resolveNode(props.node.aliasOf);
+});
+
+const mainTagLabel = computed(() => {
+  if (props.node.type !== 'group') {
+    return null;
+  }
+  const source = aliasTarget.value ?? props.node;
+  const mainTag = source.tags.find((tag) => tag.tagType === 'Main');
+  return mainTag?.name ?? null;
+});
+
+const displayTags = computed(() => {
+  if (props.node.type !== 'group') {
+    return [] as Node[];
+  }
+  return props.node.tags;
+});
+
+const tagSummary = computed(() => {
+  if (props.node.type !== 'group') {
+    return '';
+  }
+  return props.node.tags
+    .map((tag) => {
+      if (tag.tagType === 'Override' && tag.overrideFrom) {
+        return `${tag.overrideFrom} → ${tag.name}`;
+      }
+      return `${tag.name} (${tag.tagType ?? 'Main'})`;
+    })
+    .join(', ');
+});
 
 const nodeStyle = computed(() => {
   const base = { marginLeft: `${props.depth * 14}px` };
