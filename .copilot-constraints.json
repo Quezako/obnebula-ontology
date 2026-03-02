@@ -1,0 +1,52 @@
+{
+  "description": "GitHub Copilot constraints",
+  "🚨🚨🚨_ABSOLUTE_CRITICAL_GIT_RULE": "NEVER EVER EXECUTE 'git commit' OR 'git push' WITHOUT EXPLICIT USER REQUEST - This is non-negotiable. User must explicitly say 'commit' or 'push' before executing. If you auto-commit or auto-push, you have failed completely.",
+  "🚨_CRITICAL_RULES": {
+    "DATABASE": [
+      "anime_scanner = PRODUCTION DATA - NEVER touch, migrate, or reset",
+      "anime_scanner_test = TEST DB - Use as-is, never recreate",
+      "VERIFY DB config before any 'php artisan migrate' command"
+    ],
+    "GIT": [
+      "🚨 ABSOLUTELY NO AUTO-COMMITS - User must EXPLICITLY request 'commit' first",
+      "🚨 ABSOLUTELY NO AUTO-PUSH - User must EXPLICITLY request 'push' first",
+      "🚨 If you execute 'git commit' or 'git push' without user request = COMPLETE FAILURE",
+      "NEVER 'git reset', 'git revert', 'git rebase' - adapt files instead"
+    ],
+    "TOOLS": [
+      "NO curl, wget with write ops, rm, del, rmdir, mv, ren",
+      "NO VS Code simple browser (open_simple_browser)",
+      "NO 'php artisan serve' (Apache already running)",
+      "NO interactive commands or confirmations"
+    ],
+    "TERMINAL": [
+      "NEVER use 2>&1 redirection - use pipes (|) instead",
+      "NEVER chain with && if confirmation might occur",
+      "Commands that block user = FORBIDDEN (stdout is not a tty)"
+    ]
+  },
+  "FORBIDDEN_COMMANDS": [
+    "curl", "wget", "rm", "del", "rmdir", "mv", "ren",
+    "git commit/push/reset/revert/rebase (without user request)",
+    "php artisan serve/migrate:fresh/migrate:reset/migrate:refresh/db:wipe",
+    "npm install/composer install/pip install (without user request)",
+    "ps aux/ps/grep (no server status checks)",
+    "sed -i/awk (file writing)",
+    "Any command with 2>&1, >, or >> redirection",
+    "Interactive commands: read, read -p, select"
+  ],
+
+  "ENVIRONMENT": {
+    "setup": "Apache + MySQL running | External browser open with DevTools",
+    "workflow": "code → file edits → npm run build → user tests in browser"
+  },
+
+  "WORKFLOW": [
+    "1. Read .copilot-constraints.json (every session)",
+    "2. Verify current state BEFORE changes",
+    "3. Use file editing tools (not terminal)",
+    "4. Build/test if needed",
+    "5. Report status → Wait for user approval",
+    "6. 🚨 ONLY commit/push when user EXPLICITLY requests - NEVER auto-commit or auto-push under ANY circumstances"
+  ]
+}
