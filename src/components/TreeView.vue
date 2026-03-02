@@ -36,6 +36,7 @@ interface Props {
   onAddTag: (parentId: string | null) => void;
   onRemove: (id: string) => void;
   onRename: (id: string, name: string) => void;
+  allowedType?: Node['type'] | 'any';
 }
 
 const props = defineProps<Props>();
@@ -44,6 +45,9 @@ const canMove = (event: any, targetParent: Node | null) => {
   const dragged = event?.draggedContext?.element as Node | undefined;
   if (!dragged) {
     return true;
+  }
+  if (props.allowedType && props.allowedType !== 'any' && dragged.type !== props.allowedType) {
+    return false;
   }
   if (targetParent && targetParent.type === 'tag') {
     return false;

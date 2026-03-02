@@ -4,90 +4,162 @@ export interface TreeNode {
   id: string;
   name: string;
   type: NodeType;
+  tagType?: string;
+  tags: TreeNode[];
   children: TreeNode[];
 }
 
 const makeId = () => {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID();
-  }
-  return `node_${Math.random().toString(16).slice(2)}`;
+  const now = Date.now().toString();
+  const rand = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+  return `${now}${rand}`;
 };
 
-export const createNode = (type: NodeType, name?: string): TreeNode => ({
+export const createNode = (type: NodeType, name?: string, tagType?: string): TreeNode => ({
   id: makeId(),
-  name: name ?? (type === 'group' ? 'Nouveau groupe' : 'Nouveau tag'),
+  name: name ?? (type === 'group' ? '' : 'Nouveau tag'),
   type,
+  tagType: type === 'tag' ? tagType ?? 'Main' : undefined,
+  tags: [],
   children: [],
 });
 
 export const createSampleTree = (): TreeNode[] => [
   {
-    id: makeId(),
-    name: 'Entity',
+    id: '1',
+    name: '',
     type: 'group',
+    tags: [
+      {
+        id: '2',
+        name: 'Entity',
+        type: 'tag',
+        tagType: 'Main',
+        tags: [],
+        children: [],
+      },
+    ],
     children: [
       {
-        id: makeId(),
-        name: 'LivingBeing',
+        id: '3',
+        name: '',
         type: 'group',
+        tags: [
+          {
+            id: '4',
+            name: 'LivingBeing',
+            type: 'tag',
+            tagType: 'Main',
+            tags: [],
+            children: [],
+          },
+        ],
         children: [
           {
-            id: makeId(),
-            name: 'Human',
+            id: '5',
+            name: '',
             type: 'group',
+            tags: [
+              {
+                id: '6',
+                name: 'Human',
+                type: 'tag',
+                tagType: 'Main',
+                tags: [],
+                children: [],
+              },
+              {
+                id: '28',
+                name: '2 eyes',
+                type: 'tag',
+                tagType: 'Trait',
+                tags: [],
+                children: [],
+              },
+              {
+                id: '29',
+                name: '2 legs',
+                type: 'tag',
+                tagType: 'Trait',
+                tags: [],
+                children: [],
+              },
+              {
+                id: '30',
+                name: '2 arms',
+                type: 'tag',
+                tagType: 'Trait',
+                tags: [],
+                children: [],
+              },
+              {
+                id: '31',
+                name: '1 mouth',
+                type: 'tag',
+                tagType: 'Trait',
+                tags: [],
+                children: [],
+              },
+            ],
             children: [
               {
-                id: makeId(),
-                name: 'Female',
-                type: 'tag',
-                children: [],
+                id: '7',
+                name: '',
+                type: 'group',
+                tags: [
+                  {
+                    id: '8',
+                    name: 'Female',
+                    type: 'tag',
+                    tagType: 'Main',
+                    tags: [],
+                    children: [],
+                  },
+                  {
+                    id: '32',
+                    name: 'XX chromosomes',
+                    type: 'tag',
+                    tagType: 'Trait',
+                    tags: [],
+                    children: [],
+                  },
+                  {
+                    id: '33',
+                    name: 'Estrogen dominant',
+                    type: 'tag',
+                    tagType: 'Trait',
+                    tags: [],
+                    children: [],
+                  },
+                  {
+                    id: '34',
+                    name: 'Mammary glands',
+                    type: 'tag',
+                    tagType: 'Trait',
+                    tags: [],
+                    children: [],
+                  },
+                ],
+                children: [
+                ],
               },
             ],
           },
           {
-            id: makeId(),
-            name: 'Animal',
-            type: 'tag',
-            children: [],
-          },
-        ],
-      },
-      {
-        id: makeId(),
-        name: 'Named',
-        type: 'group',
-        children: [
-          {
-            id: makeId(),
-            name: 'Bulma',
+            id: '9',
+            name: '',
             type: 'group',
+            tags: [
+              {
+                id: '10',
+                name: 'Animal',
+                type: 'tag',
+                tagType: 'Main',
+                tags: [],
+                children: [],
+              },
+            ],
             children: [
-              {
-                id: makeId(),
-                name: 'Human',
-                type: 'group',
-                children: [
-                  {
-                    id: makeId(),
-                    name: 'Female',
-                    type: 'tag',
-                    children: [],
-                  },
-                ],
-              },
-              {
-                id: makeId(),
-                name: 'FictionalCharacter',
-                type: 'tag',
-                children: [],
-              },
-              {
-                id: makeId(),
-                name: 'Blue hair',
-                type: 'tag',
-                children: [],
-              },
             ],
           },
         ],
@@ -95,22 +167,196 @@ export const createSampleTree = (): TreeNode[] => [
     ],
   },
   {
-    id: makeId(),
-    name: 'Object',
+    id: '11',
+    name: '',
     type: 'group',
-    children: [],
+    tags: [
+      {
+        id: '12',
+        name: 'Named',
+        type: 'tag',
+        tagType: 'Main',
+        tags: [],
+        children: [],
+      },
+    ],
+    children: [
+      {
+        id: '13',
+        name: '',
+        type: 'group',
+        tags: [
+          {
+            id: '14',
+            name: 'Bulma',
+            type: 'tag',
+            tagType: 'Main',
+            tags: [],
+            children: [],
+          },
+          {
+            id: '67',
+            name: 'Long hair',
+            type: 'tag',
+            tagType: 'Feature',
+            tags: [],
+            children: [],
+          },
+          {
+            id: '68',
+            name: 'Blue eyes',
+            type: 'tag',
+            tagType: 'Feature',
+            tags: [],
+            children: [],
+          },
+          {
+            id: '69',
+            name: 'Ponytail',
+            type: 'tag',
+            tagType: 'Feature',
+            tags: [],
+            children: [],
+          },
+        ],
+        children: [
+          {
+            id: '15',
+            name: '',
+            type: 'group',
+            tags: [
+              {
+                id: '16',
+                name: 'Human',
+                type: 'tag',
+                tagType: 'Main',
+                tags: [],
+                children: [],
+              },
+              {
+                id: '70',
+                name: '2 eyes',
+                type: 'tag',
+                tagType: 'Trait',
+                tags: [],
+                children: [],
+              },
+              {
+                id: '71',
+                name: '2 legs',
+                type: 'tag',
+                tagType: 'Trait',
+                tags: [],
+                children: [],
+              },
+              {
+                id: '72',
+                name: '2 arms',
+                type: 'tag',
+                tagType: 'Trait',
+                tags: [],
+                children: [],
+              },
+              {
+                id: '73',
+                name: '1 mouth',
+                type: 'tag',
+                tagType: 'Trait',
+                tags: [],
+                children: [],
+              },
+            ],
+            children: [
+              {
+                id: '17',
+                name: '',
+                type: 'group',
+                tags: [
+                  {
+                    id: '18',
+                    name: 'Female',
+                    type: 'tag',
+                    tagType: 'Main',
+                    tags: [],
+                    children: [],
+                  },
+                ],
+                children: [
+                ],
+              },
+            ],
+          },
+          {
+            id: '19',
+            name: '',
+            type: 'group',
+            tags: [
+              {
+                id: '20',
+                name: 'FictionalCharacter',
+                type: 'tag',
+                tagType: 'Main',
+                tags: [],
+                children: [],
+              },
+            ],
+            children: [
+            ],
+          },
+        ],
+      },
+    ],
   },
   {
-    id: makeId(),
-    name: 'Place',
+    id: '22',
+    name: '',
     type: 'group',
-    children: [],
+    tags: [
+      {
+        id: '23',
+        name: 'Object',
+        type: 'tag',
+        tagType: 'Main',
+        tags: [],
+        children: [],
+      },
+    ],
+    children: [
+    ],
   },
   {
-    id: makeId(),
-    name: 'Concept',
+    id: '24',
+    name: '',
     type: 'group',
-    children: [],
+    tags: [
+      {
+        id: '25',
+        name: 'Place',
+        type: 'tag',
+        tagType: 'Main',
+        tags: [],
+        children: [],
+      },
+    ],
+    children: [
+    ],
+  },
+  {
+    id: '26',
+    name: '',
+    type: 'group',
+    tags: [
+      {
+        id: '27',
+        name: 'Concept',
+        type: 'tag',
+        tagType: 'Main',
+        tags: [],
+        children: [],
+      },
+    ],
+    children: [
+    ],
   },
 ];
 
@@ -119,9 +365,15 @@ export const findNode = (nodes: TreeNode[], id: string): TreeNode | null => {
     if (node.id === id) {
       return node;
     }
-    const match = findNode(node.children, id);
-    if (match) {
-      return match;
+    if (node.type === 'group') {
+      const tagMatch = findNode(node.tags, id);
+      if (tagMatch) {
+        return tagMatch;
+      }
+      const childMatch = findNode(node.children, id);
+      if (childMatch) {
+        return childMatch;
+      }
     }
   }
   return null;
@@ -134,8 +386,13 @@ export const removeNode = (nodes: TreeNode[], id: string): boolean => {
     return true;
   }
   for (const node of nodes) {
-    if (removeNode(node.children, id)) {
-      return true;
+    if (node.type === 'group') {
+      if (removeNode(node.tags, id)) {
+        return true;
+      }
+      if (removeNode(node.children, id)) {
+        return true;
+      }
     }
   }
   return false;
@@ -158,6 +415,10 @@ export const addNode = (nodes: TreeNode[], parentId: string | null, node: TreeNo
   const parent = findNode(nodes, parentId);
   if (!parent || parent.type === 'tag') {
     return false;
+  }
+  if (node.type === 'tag') {
+    parent.tags.push(node);
+    return true;
   }
   parent.children.push(node);
   return true;
