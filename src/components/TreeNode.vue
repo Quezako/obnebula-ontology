@@ -2,7 +2,11 @@
   <div>
     <div
       class="node"
-      :class="selectable && node.type === 'group' ? 'node--selectable' : ''"
+      :class="[
+        selectable && node.type === 'group' ? 'node--selectable' : '',
+        isTagHidden ? 'node--hidden' : '',
+        isAliasLocalTag ? 'node--alias-local' : '',
+      ]"
       :style="nodeStyle"
     >
       <span v-if="!selectable" class="drag-handle">⠿</span>
@@ -49,7 +53,7 @@
           {{ node.type === 'group' ? 'Groupe' : 'Tag' }}
         </span>
       </div>
-      <div v-if="!selectable && !hideActions" class="node__actions">
+      <div v-if="!selectable && !effectiveHideActions" class="node__actions">
         <button v-if="node.type === 'group'" @click="onAddGroup(node.id)">+ Groupe</button>
         <button v-if="node.type === 'group'" @click="onAddTag(node.id)">+ Tag</button>
         <button
@@ -71,6 +75,22 @@
         <button v-if="node.type === 'group'" @click.stop="onSelectGroup?.(node.id)">
           Sélectionner
         </button>
+        <button
+          v-if="aliasContextId && node.type === 'group'"
+          @click.stop="onAddAliasTag(aliasContextId, node.id)"
+        >
+          + Tag (alias)
+        </button>
+        <template v-if="aliasContextId && node.type === 'tag'">
+            <button
+              @click.stop="onAliasTagOverride?.(aliasContextId, node.id, parent?.id ?? aliasContextId)"
+            >
+              Surcharger
+            </button>
+            <button @click.stop="onAliasTagHide?.(aliasContextId, node.id)">
+              {{ isTagHidden ? 'Afficher' : 'Masquer' }}
+            </button>
+        </template>
       </div>
     </div>
 
@@ -82,16 +102,20 @@
           :depth="0"
           :on-add-group="onAddGroup"
           :on-add-tag="onAddTag"
+          :on-add-alias-tag="onAddAliasTag"
           :on-remove="onRemove"
           :on-rename="onRename"
           :on-alias="onAlias"
           :on-remove-alias="onRemoveAlias"
+          :on-alias-tag-hide="onAliasTagHide"
+          :on-alias-tag-override="onAliasTagOverride"
           :resolve-node="resolveNode"
           :resolve-breadcrumb="resolveBreadcrumb"
           :resolve-path="resolvePath"
           :is-alias-ancestors-open="isAliasAncestorsOpen"
           :on-toggle-alias-ancestors="onToggleAliasAncestors"
           :hide-actions="true"
+          :alias-context-id="node.id"
         />
       </div>
       <div class="node__tags">
@@ -108,10 +132,13 @@
             :depth="depth + 1"
             :on-add-group="onAddGroup"
             :on-add-tag="onAddTag"
+            :on-add-alias-tag="onAddAliasTag"
             :on-remove="onRemove"
             :on-rename="onRename"
             :on-alias="onAlias"
             :on-remove-alias="onRemoveAlias"
+            :on-alias-tag-hide="onAliasTagHide"
+            :on-alias-tag-override="onAliasTagOverride"
             :resolve-node="resolveNode"
             :resolve-breadcrumb="resolveBreadcrumb"
             :resolve-path="resolvePath"
@@ -122,6 +149,8 @@
             :ancestor-toggle-id="ancestorToggleId"
             :ancestors-open="ancestorsOpen"
             :on-toggle-ancestors="onToggleAncestors"
+            :hide-actions="effectiveHideActions"
+            :alias-context-id="aliasContextId"
             allowed-type="tag"
           />
         </div>
@@ -132,10 +161,13 @@
         :depth="depth + 1"
         :on-add-group="onAddGroup"
         :on-add-tag="onAddTag"
+        :on-add-alias-tag="onAddAliasTag"
         :on-remove="onRemove"
         :on-rename="onRename"
         :on-alias="onAlias"
         :on-remove-alias="onRemoveAlias"
+        :on-alias-tag-hide="onAliasTagHide"
+        :on-alias-tag-override="onAliasTagOverride"
         :resolve-node="resolveNode"
         :resolve-breadcrumb="resolveBreadcrumb"
         :resolve-path="resolvePath"
@@ -146,6 +178,8 @@
         :ancestor-toggle-id="ancestorToggleId"
         :ancestors-open="ancestorsOpen"
         :on-toggle-ancestors="onToggleAncestors"
+        :hide-actions="effectiveHideActions"
+        :alias-context-id="aliasContextId"
         allowed-type="group"
       />
     </div>
@@ -159,13 +193,17 @@ import type { TreeNode as Node } from '../store';
 
 interface Props {
   node: Node;
+  parent: Node | null;
   depth: number;
   onAddGroup: (parentId: string | null) => void;
   onAddTag: (parentId: string | null) => void;
+  onAddAliasTag: (aliasId: string, targetGroupId: string) => void;
   onRemove: (id: string) => void;
   onRename: (id: string, name: string) => void;
   onAlias: (id: string) => void;
   onRemoveAlias: (id: string) => void;
+  onAliasTagHide?: (aliasId: string, tagId: string) => void;
+  onAliasTagOverride?: (aliasId: string, tagId: string, targetGroupId: string) => void;
   resolveNode: (id: string) => Node | null;
   resolveBreadcrumb: (id: string) => string;
   resolvePath: (id: string) => Node[];
@@ -177,6 +215,7 @@ interface Props {
   ancestorsOpen?: boolean;
   onToggleAncestors?: () => void;
   onSelectGroup?: (id: string) => void;
+  aliasContextId?: string | null;
 }
 
 const props = defineProps<Props>();
@@ -220,18 +259,56 @@ const aliasBreadcrumb = computed(() => {
   return props.resolveBreadcrumb(props.node.aliasOf);
 });
 
+const mergeAliasTags = (
+  baseTags: Node[],
+  localTags: Node[],
+  targetGroupId: string,
+  includeUnscoped: boolean
+) => {
+  const scoped = localTags.filter((tag) => {
+    if (tag.aliasForGroupId) {
+      return tag.aliasForGroupId === targetGroupId;
+    }
+    return includeUnscoped;
+  });
+  const overrides = scoped.filter((tag) => tag.tagType === 'Override' && tag.overrideFrom);
+  const additions = scoped.filter((tag) => tag.tagType !== 'Override');
+  const ordered: Node[] = [];
+  baseTags.forEach((baseTag) => {
+    ordered.push(baseTag);
+    const matching = overrides.filter((tag) => tag.overrideFrom === baseTag.name);
+    ordered.push(...matching);
+  });
+  ordered.push(...additions);
+  return ordered;
+};
+
 const displayTags = computed(() => {
   if (props.node.type !== 'group') {
     return [] as Node[];
   }
-  return props.node.tags;
+  if (props.aliasContextId) {
+    const aliasNode = props.resolveNode(props.aliasContextId);
+    if (aliasNode?.type === 'group' && aliasNode.aliasOf) {
+      const path = props.resolvePath(aliasNode.aliasOf);
+      const isAncestor = path.some((node) => node.id === props.node.id);
+      if (isAncestor) {
+        return mergeAliasTags(props.node.tags ?? [], aliasNode.tags ?? [], props.node.id, false);
+      }
+    }
+  }
+  if (!props.node.aliasOf) {
+    return props.node.tags;
+  }
+  const baseNode = props.resolveNode(props.node.aliasOf);
+  return mergeAliasTags(baseNode?.tags ?? [], props.node.tags ?? [], props.node.aliasOf, true);
 });
 
 const tagSummary = computed(() => {
   if (props.node.type !== 'group') {
     return '';
   }
-  return props.node.tags
+  return displayTags.value
     .map((tag) => {
       if (tag.tagType === 'Override' && tag.overrideFrom) {
         return `${tag.overrideFrom} → ${tag.name}`;
@@ -265,6 +342,26 @@ const aliasAncestorTree = computed(() => {
     };
   };
   return [cloneChain(0)];
+});
+
+const effectiveHideActions = computed(() => Boolean(props.hideActions));
+
+const isTagHidden = computed(() => {
+  if (!props.aliasContextId || props.node.type !== 'tag') {
+    return false;
+  }
+  const aliasNode = props.resolveNode(props.aliasContextId);
+  const hidden = new Set(aliasNode?.hiddenTagIds ?? []);
+  return hidden.has(props.node.id);
+});
+
+const isAliasLocalTag = computed(() => {
+  if (!props.aliasContextId || props.node.type !== 'tag') {
+    return false;
+  }
+  const aliasNode = props.resolveNode(props.aliasContextId);
+  const localTagIds = new Set(aliasNode?.tags.map((tag) => tag.id) ?? []);
+  return localTagIds.has(props.node.id);
 });
 
 const nodeStyle = computed(() => {

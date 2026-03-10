@@ -357,6 +357,16 @@ body {
   box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
 }
 
+.node--hidden {
+  opacity: 0.5;
+  filter: grayscale(0.3);
+}
+
+.node--alias-local {
+  background: #fff7ed;
+  border-color: #fdba74;
+}
+
 .modal {
   position: fixed;
   inset: 0;

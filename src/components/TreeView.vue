@@ -11,13 +11,17 @@
       v-for="element in nodes"
       :key="element.id"
       :node="element"
+      :parent="parent"
       :depth="depth"
       :on-add-group="onAddGroup"
       :on-add-tag="onAddTag"
+      :on-add-alias-tag="onAddAliasTag"
       :on-remove="onRemove"
       :on-rename="onRename"
       :on-alias="onAlias"
       :on-remove-alias="onRemoveAlias"
+      :on-alias-tag-hide="onAliasTagHide"
+      :on-alias-tag-override="onAliasTagOverride"
       :resolve-node="resolveNode"
       :resolve-breadcrumb="resolveBreadcrumb"
       :resolve-path="resolvePath"
@@ -29,6 +33,7 @@
       :ancestors-open="ancestorsOpen"
       :on-toggle-ancestors="onToggleAncestors"
       :on-select-group="onSelectGroup"
+      :alias-context-id="aliasContextId"
     />
   </VueDraggableNext>
 </template>
@@ -45,10 +50,13 @@ interface Props {
   depth: number;
   onAddGroup: (parentId: string | null) => void;
   onAddTag: (parentId: string | null) => void;
+  onAddAliasTag: (aliasId: string, targetGroupId: string) => void;
   onRemove: (id: string) => void;
   onRename: (id: string, name: string) => void;
   onAlias: (id: string) => void;
   onRemoveAlias: (id: string) => void;
+  onAliasTagHide: (aliasId: string, tagId: string) => void;
+  onAliasTagOverride: (aliasId: string, tagId: string, targetGroupId: string) => void;
   resolveNode: (id: string) => Node | null;
   resolveBreadcrumb: (id: string) => string;
   resolvePath: (id: string) => Node[];
@@ -61,6 +69,7 @@ interface Props {
   ancestorsOpen?: boolean;
   onToggleAncestors?: () => void;
   onSelectGroup?: (id: string) => void;
+  aliasContextId?: string | null;
 }
 
 const props = defineProps<Props>();

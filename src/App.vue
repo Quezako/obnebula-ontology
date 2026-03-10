@@ -25,6 +25,7 @@
         :depth="0"
         :on-add-group="addGroup"
         :on-add-tag="addTag"
+        :on-add-alias-tag="addAliasTag"
         :on-remove="remove"
         :on-rename="rename"
         :on-alias="aliasGroup"
@@ -34,6 +35,8 @@
         :resolve-path="resolvePath"
         :is-alias-ancestors-open="isAliasAncestorsOpen"
         :on-toggle-alias-ancestors="toggleAliasAncestors"
+        :on-alias-tag-hide="hideAliasTag"
+        :on-alias-tag-override="overrideAliasTag"
       />
     </section>
 
@@ -49,6 +52,7 @@
         :depth="0"
         :on-add-group="addGroup"
         :on-add-tag="addTag"
+        :on-add-alias-tag="addAliasTag"
         :on-remove="remove"
         :on-rename="rename"
         :on-alias="aliasGroup"
@@ -58,6 +62,8 @@
         :resolve-path="resolvePath"
         :is-alias-ancestors-open="isAliasAncestorsOpen"
         :on-toggle-alias-ancestors="toggleAliasAncestors"
+        :on-alias-tag-hide="hideAliasTag"
+        :on-alias-tag-override="overrideAliasTag"
       />
     </section>
 
@@ -71,6 +77,7 @@
         :depth="0"
         :on-add-group="addGroup"
         :on-add-tag="addTag"
+        :on-add-alias-tag="addAliasTag"
         :on-remove="remove"
         :on-rename="rename"
         :on-alias="aliasGroup"
@@ -80,6 +87,8 @@
         :resolve-path="resolvePath"
         :is-alias-ancestors-open="isAliasAncestorsOpen"
         :on-toggle-alias-ancestors="toggleAliasAncestors"
+        :on-alias-tag-hide="hideAliasTag"
+        :on-alias-tag-override="overrideAliasTag"
         :ancestor-toggle-id="'80'"
         :ancestors-open="showVidelAncestors"
         :on-toggle-ancestors="toggleVidelAncestors"
@@ -102,6 +111,7 @@
             :depth="0"
             :on-add-group="addGroup"
             :on-add-tag="addTag"
+            :on-add-alias-tag="addAliasTag"
             :on-remove="remove"
             :on-rename="rename"
             :on-alias="aliasGroup"
@@ -111,6 +121,8 @@
             :resolve-path="resolvePath"
             :is-alias-ancestors-open="isAliasAncestorsOpen"
             :on-toggle-alias-ancestors="toggleAliasAncestors"
+            :on-alias-tag-hide="hideAliasTag"
+            :on-alias-tag-override="overrideAliasTag"
             :selectable="true"
             :on-select-group="applyAlias"
           />
@@ -169,6 +181,19 @@ const addGroup = (parentId: string | null) => {
 
 const addTag = (parentId: string | null) => {
   addNode(nodes.value, parentId, createNode('tag'));
+  refresh();
+};
+
+const addAliasTag = (aliasId: string, targetGroupId: string) => {
+  const aliasNode = findNode(nodes.value, aliasId);
+  if (!aliasNode || aliasNode.type !== 'group') {
+    console.info('[alias] add tag skipped: alias not found', { aliasId, targetGroupId });
+    return;
+  }
+  const tag = createNode('tag');
+  tag.aliasForGroupId = targetGroupId;
+  addNode(nodes.value, aliasId, tag);
+  console.info('[alias] add tag', { aliasId, targetGroupId, tagId: tag.id });
   refresh();
 };
 
@@ -255,6 +280,54 @@ const removeAlias = (id: string) => {
     return;
   }
   node.aliasOf = undefined;
+  refresh();
+};
+
+const hideAliasTag = (aliasId: string, tagId: string) => {
+  const node = findNode(nodes.value, aliasId);
+  if (!node || node.type !== 'group') {
+    return;
+  }
+  const next = new Set(node.hiddenTagIds ?? []);
+  if (next.has(tagId)) {
+    next.delete(tagId);
+  } else {
+    next.add(tagId);
+  }
+  node.hiddenTagIds = Array.from(next);
+  refresh();
+};
+
+const overrideAliasTag = (aliasId: string, tagId: string, targetGroupId: string) => {
+  const node = findNode(nodes.value, aliasId);
+  if (!node || node.type !== 'group') {
+    console.info('[alias] override skipped: alias not found', { aliasId, tagId, targetGroupId });
+    return;
+  }
+  const baseTag = findNode(nodes.value, tagId);
+  const baseName = baseTag?.type === 'tag' ? baseTag.name : 'Tag';
+  const nextName = window.prompt(`Surcharger "${baseName}" par quel tag ?`, baseName);
+  if (!nextName) {
+    return;
+  }
+  const overrideTag = {
+    id: `${Date.now()}${Math.floor(Math.random() * 100000)}`,
+    name: nextName,
+    type: 'tag',
+    tagType: 'Override',
+    overrideFrom: baseName,
+    aliasForGroupId: targetGroupId,
+    tags: [],
+    children: [],
+  };
+  node.tags.push(overrideTag);
+  console.info('[alias] override tag', {
+    aliasId,
+    tagId,
+    targetGroupId,
+    overrideId: overrideTag.id,
+    name: nextName,
+  });
   refresh();
 };
 </script>

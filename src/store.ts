@@ -6,6 +6,7 @@ export interface TreeNode {
   type: NodeType;
   tagType?: string;
   overrideFrom?: string;
+  aliasForGroupId?: string;
   aliasOf?: string;
   hiddenTagIds?: string[];
   tags: TreeNode[];
@@ -24,6 +25,7 @@ export const createNode = (type: NodeType, name?: string, tagType?: string): Tre
   type,
   tagType: type === 'tag' ? tagType ?? 'Main' : undefined,
   overrideFrom: undefined,
+  aliasForGroupId: undefined,
   aliasOf: undefined,
   hiddenTagIds: [],
   tags: [],
