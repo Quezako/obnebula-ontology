@@ -1,8 +1,26 @@
 <template>
   <div>
-    <div class="node" :style="nodeStyle">
-      <span class="drag-handle">⠿</span>
+    <div
+      class="node"
+      :class="selectable && node.type === 'group' ? 'node--selectable' : ''"
+      :style="nodeStyle"
+    >
+      <span v-if="!selectable" class="drag-handle">⠿</span>
       <div class="node__label">
+        <button
+          v-if="showAncestorToggle"
+          class="button button--ghost"
+          @click.stop="onToggleAncestors?.()"
+        >
+          {{ ancestorsOpen ? '▴' : '◂' }}
+        </button>
+        <button
+          v-if="showAliasAncestorToggle"
+          class="button button--ghost"
+          @click.stop="onToggleAliasAncestors?.(node.id)"
+        >
+          {{ aliasAncestorsOpen ? '▴' : '◂' }}
+        </button>
         <button v-if="node.type === 'group'" class="button button--ghost" @click="toggle">
           {{ expanded ? '▾' : '▸' }}
         </button>
@@ -15,6 +33,7 @@
             ID: {{ node.id }}
             <span v-if="node.aliasOf" class="node__alias">Alias → {{ node.aliasOf }}</span>
             <span v-if="mainTagLabel" class="node__alias-main">Main: {{ mainTagLabel }}</span>
+            <span v-if="aliasBreadcrumb" class="node__breadcrumb">{{ aliasBreadcrumb }}</span>
           </span>
           <span v-else>
             <template v-if="node.tagType === 'Override' && node.overrideFrom">
@@ -30,16 +49,51 @@
           {{ node.type === 'group' ? 'Groupe' : 'Tag' }}
         </span>
       </div>
-      <div class="node__actions">
+      <div v-if="!selectable && !hideActions" class="node__actions">
         <button v-if="node.type === 'group'" @click="onAddGroup(node.id)">+ Groupe</button>
         <button v-if="node.type === 'group'" @click="onAddTag(node.id)">+ Tag</button>
-        <button v-if="node.type === 'group'" @click="onAlias(node.id)">Alias</button>
+        <button
+          v-if="node.type === 'group' && !node.aliasOf"
+          @click="onAlias(node.id)"
+        >
+          Alias
+        </button>
+        <button
+          v-if="node.type === 'group' && node.aliasOf"
+          @click="onRemoveAlias(node.id)"
+        >
+          Supprimer alias
+        </button>
         <button v-if="node.type === 'tag'" @click="startEdit">Renommer</button>
         <button @click="onRemove(node.id)">Supprimer</button>
+      </div>
+      <div v-else class="node__actions">
+        <button v-if="node.type === 'group'" @click.stop="onSelectGroup?.(node.id)">
+          Sélectionner
+        </button>
       </div>
     </div>
 
     <div v-if="node.type === 'group' && expanded" class="node__children">
+      <div v-if="aliasAncestorsOpen" class="alias-ancestors">
+        <TreeView
+          :nodes="aliasAncestorTree"
+          :parent="null"
+          :depth="0"
+          :on-add-group="onAddGroup"
+          :on-add-tag="onAddTag"
+          :on-remove="onRemove"
+          :on-rename="onRename"
+          :on-alias="onAlias"
+          :on-remove-alias="onRemoveAlias"
+          :resolve-node="resolveNode"
+          :resolve-breadcrumb="resolveBreadcrumb"
+          :resolve-path="resolvePath"
+          :is-alias-ancestors-open="isAliasAncestorsOpen"
+          :on-toggle-alias-ancestors="onToggleAliasAncestors"
+          :hide-actions="true"
+        />
+      </div>
       <div class="node__tags">
         <button class="button button--ghost" @click="toggleTags">
           {{ tagsExpanded ? '▾' : '▸' }} Tags ({{ displayTags.length }})
@@ -57,7 +111,17 @@
             :on-remove="onRemove"
             :on-rename="onRename"
             :on-alias="onAlias"
+            :on-remove-alias="onRemoveAlias"
             :resolve-node="resolveNode"
+            :resolve-breadcrumb="resolveBreadcrumb"
+            :resolve-path="resolvePath"
+            :is-alias-ancestors-open="isAliasAncestorsOpen"
+            :on-toggle-alias-ancestors="onToggleAliasAncestors"
+            :selectable="selectable"
+            :on-select-group="onSelectGroup"
+            :ancestor-toggle-id="ancestorToggleId"
+            :ancestors-open="ancestorsOpen"
+            :on-toggle-ancestors="onToggleAncestors"
             allowed-type="tag"
           />
         </div>
@@ -71,7 +135,17 @@
         :on-remove="onRemove"
         :on-rename="onRename"
         :on-alias="onAlias"
+        :on-remove-alias="onRemoveAlias"
         :resolve-node="resolveNode"
+        :resolve-breadcrumb="resolveBreadcrumb"
+        :resolve-path="resolvePath"
+        :is-alias-ancestors-open="isAliasAncestorsOpen"
+        :on-toggle-alias-ancestors="onToggleAliasAncestors"
+        :selectable="selectable"
+        :on-select-group="onSelectGroup"
+        :ancestor-toggle-id="ancestorToggleId"
+        :ancestors-open="ancestorsOpen"
+        :on-toggle-ancestors="onToggleAncestors"
         allowed-type="group"
       />
     </div>
@@ -91,7 +165,18 @@ interface Props {
   onRemove: (id: string) => void;
   onRename: (id: string, name: string) => void;
   onAlias: (id: string) => void;
+  onRemoveAlias: (id: string) => void;
   resolveNode: (id: string) => Node | null;
+  resolveBreadcrumb: (id: string) => string;
+  resolvePath: (id: string) => Node[];
+  isAliasAncestorsOpen: (id: string) => boolean;
+  onToggleAliasAncestors: (id: string) => void;
+  selectable?: boolean;
+  hideActions?: boolean;
+  ancestorToggleId?: string | null;
+  ancestorsOpen?: boolean;
+  onToggleAncestors?: () => void;
+  onSelectGroup?: (id: string) => void;
 }
 
 const props = defineProps<Props>();
@@ -128,6 +213,13 @@ const mainTagLabel = computed(() => {
   return mainTag?.name ?? null;
 });
 
+const aliasBreadcrumb = computed(() => {
+  if (!props.node.aliasOf) {
+    return null;
+  }
+  return props.resolveBreadcrumb(props.node.aliasOf);
+});
+
 const displayTags = computed(() => {
   if (props.node.type !== 'group') {
     return [] as Node[];
@@ -147,6 +239,32 @@ const tagSummary = computed(() => {
       return `${tag.name} (${tag.tagType ?? 'Main'})`;
     })
     .join(', ');
+});
+
+const showAncestorToggle = computed(
+  () => props.node.type === 'group' && props.ancestorToggleId === props.node.id
+);
+const showAliasAncestorToggle = computed(
+  () => props.node.type === 'group' && Boolean(props.node.aliasOf)
+);
+const aliasAncestorsOpen = computed(() => props.isAliasAncestorsOpen(props.node.id));
+const aliasAncestorTree = computed(() => {
+  if (!props.node.aliasOf) {
+    return [] as Node[];
+  }
+  const path = props.resolvePath(props.node.aliasOf);
+  if (path.length <= 1) {
+    return path;
+  }
+  const cloneChain = (index: number): Node => {
+    const node = path[index];
+    const next = index < path.length - 1 ? [cloneChain(index + 1)] : [];
+    return {
+      ...node,
+      children: next,
+    };
+  };
+  return [cloneChain(0)];
 });
 
 const nodeStyle = computed(() => {

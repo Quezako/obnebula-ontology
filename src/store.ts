@@ -274,6 +274,31 @@ export const createSampleTree = (): TreeNode[] => [
           },
         ],
       },
+      {
+        id: '80',
+        name: '',
+        type: 'group',
+        tags: [
+          {
+            id: '81',
+            name: 'Videl',
+            type: 'tag',
+            tagType: 'Main',
+            tags: [],
+            children: [],
+          },
+        ],
+        children: [
+          {
+            id: '82',
+            name: '',
+            type: 'group',
+            aliasOf: '7',
+            tags: [],
+            children: [],
+          },
+        ],
+      },
     ],
   },
   {
@@ -401,4 +426,19 @@ export const isDescendant = (targetParent: TreeNode | null, dragged: TreeNode): 
     return true;
   }
   return dragged.children.some((child) => isDescendant(targetParent, child));
+};
+
+export const findPathToNode = (nodes: TreeNode[], id: string): TreeNode[] | null => {
+  for (const node of nodes) {
+    if (node.id === id) {
+      return [node];
+    }
+    if (node.type === 'group') {
+      const inChildren = findPathToNode(node.children, id);
+      if (inChildren) {
+        return [node, ...inChildren];
+      }
+    }
+  }
+  return null;
 };

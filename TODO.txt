@@ -1,3 +1,8 @@
+# interface :
+- personnage Videl vide.
+- si on ajoute depuis l'abre entity human:female, il faut un moyen de sélectionner visuellement dans l'abre, pas jusyte saisir un id.
+- si on veut ensuite surcharger un attribut au dessus, par exemple dans human : 1_arm. il faut pouvori parcourir cette hierachie dnas le contexte de ce personnage.
+--------------
 # quand on ajoute une nouveau groupe, il faut lui donner des tags principaux (en plus de leur type)
 # on ajoute ensuite des propriétés qui sont des tag group déjà existants.
 en fait, il faut différencier les groupes auxquels on ajoute des tags
@@ -9,3 +14,18 @@ ou une autre approche ?
 probablement différencier ce qui est le référentiel, le backbone et ce qui est une instance piochée dans ce référentiel.
 référentiel : entity -> living -> animal -> human -> female
 instance : bulma <- female (avec héritage inversé : <- human <- animal, etc.)
+---------
+# taxonomie structure :
+project -> point d'entrée dans un group_set (il peut y avoir des groupes au dessus, mais on ne prend que ce qu'il y a en dessous).
+- ex : humains, plutot que tout le vivant (plantes, etc.).
+group_set -> associe des tag_groups. group_id, parent_group_id, layer_id (type. pointe vers un tag. comment peut-on s'en servire ?)
+- ex : (group)bulma à (group)human:(group)female. (group)human est un tag group et (group)female est un autre tag group qui est une variation du (group)human.
+- (group)bulma (group)intersex : une variation de (group)bulma avec (group)human:(group)intersex au lieu de (group)human:(group)female.
+- (group)bulma (group)adult : variation de (group)bulma avec (tag)green_hair -> (tag)blue_hair, (tag)long_hair -> (tag)short_hair, (tag)teen -> (tag)adult, etc.
+-> Mais comment on sait quels sont les tags qui sont communs et les tags qui sont remplacés par d'autres ?
+group_set_config : configuration spécifique d'un group_set, pour ses champs principaux, par exnmple : {"required_tags": ["character", "copyright", "sex"]}
+-> la conf serait différente pour une traduction : {"required_tags": ["source_word", "source_language"]}.
+   mais est-ce qu'on ajoute "target_word", "target_language" dans ce set, ou dans un set associé ?
+   car groupe 1 : 日本[にほん], japanese. on ne va pas remmettre ces deux tags à chaque groupe de traduction (anglais, français, etc.) ?
+tag_group : groupe de tags avec l'id du groupe, le label et le type de tag. il peut y avoit plusieurs lignes pur un seul groupe, afin d'associer les tags.
+tag : que des labels.

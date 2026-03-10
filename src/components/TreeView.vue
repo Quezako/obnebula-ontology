@@ -5,6 +5,7 @@
     item-key="id"
     group="ontology"
     :move="(event) => canMove(event, parent)"
+    :disabled="selectable"
   >
     <TreeNode
       v-for="element in nodes"
@@ -16,12 +17,20 @@
       :on-remove="onRemove"
       :on-rename="onRename"
       :on-alias="onAlias"
+      :on-remove-alias="onRemoveAlias"
       :resolve-node="resolveNode"
+      :resolve-breadcrumb="resolveBreadcrumb"
+      :resolve-path="resolvePath"
+      :is-alias-ancestors-open="isAliasAncestorsOpen"
+      :on-toggle-alias-ancestors="onToggleAliasAncestors"
+      :selectable="selectable"
+      :hide-actions="hideActions"
+      :ancestor-toggle-id="ancestorToggleId"
+      :ancestors-open="ancestorsOpen"
+      :on-toggle-ancestors="onToggleAncestors"
+      :on-select-group="onSelectGroup"
     />
   </VueDraggableNext>
-  <div v-if="nodes.length === 0" class="empty">
-    Aucun élément pour le moment. Ajoute un groupe ou un tag.
-  </div>
 </template>
 
 <script setup lang="ts">
@@ -39,8 +48,19 @@ interface Props {
   onRemove: (id: string) => void;
   onRename: (id: string, name: string) => void;
   onAlias: (id: string) => void;
+  onRemoveAlias: (id: string) => void;
   resolveNode: (id: string) => Node | null;
+  resolveBreadcrumb: (id: string) => string;
+  resolvePath: (id: string) => Node[];
+  isAliasAncestorsOpen: (id: string) => boolean;
+  onToggleAliasAncestors: (id: string) => void;
   allowedType?: Node['type'] | 'any';
+  selectable?: boolean;
+  hideActions?: boolean;
+  ancestorToggleId?: string | null;
+  ancestorsOpen?: boolean;
+  onToggleAncestors?: () => void;
+  onSelectGroup?: (id: string) => void;
 }
 
 const props = defineProps<Props>();

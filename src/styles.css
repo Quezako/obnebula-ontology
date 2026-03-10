@@ -308,6 +308,23 @@ body {
   padding: 2px 6px;
 }
 
+.node__breadcrumb {
+  margin-left: 8px;
+  font-size: 11px;
+  color: #475569;
+  background: #f1f5f9;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.alias-ancestors {
+  margin: 8px 0 10px;
+  padding: 8px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px dashed #e2e8f0;
+}
+
 .node__tags-summary {
   margin-left: 8px;
   font-size: 12px;
@@ -328,6 +345,58 @@ body {
   border-radius: 8px;
   font-size: 12px;
   cursor: pointer;
+}
+
+.node--selectable {
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.node--selectable:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+.modal__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.modal__content {
+  position: relative;
+  max-width: 900px;
+  margin: 48px auto 72px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.3);
+}
+
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.modal__subtitle {
+  margin: 0 0 16px;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+
+.modal__body {
+  max-height: 60vh;
+  overflow: auto;
+  padding-right: 4px;
 }
 
 .node__children {
