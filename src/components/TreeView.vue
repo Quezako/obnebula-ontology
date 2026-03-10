@@ -20,8 +20,10 @@
       :on-rename="onRename"
       :on-alias="onAlias"
       :on-remove-alias="onRemoveAlias"
+      :on-rebase-alias="onRebaseAlias"
       :on-alias-tag-hide="onAliasTagHide"
       :on-alias-tag-override="onAliasTagOverride"
+      :on-alias-tag-reset="onAliasTagReset"
       :resolve-node="resolveNode"
       :resolve-breadcrumb="resolveBreadcrumb"
       :resolve-path="resolvePath"
@@ -55,8 +57,10 @@ interface Props {
   onRename: (id: string, name: string) => void;
   onAlias: (id: string) => void;
   onRemoveAlias: (id: string) => void;
+  onRebaseAlias: (id: string) => void;
   onAliasTagHide: (aliasId: string, tagId: string) => void;
   onAliasTagOverride: (aliasId: string, tagId: string, targetGroupId: string) => void;
+  onAliasTagReset: (aliasId: string, overrideId: string) => void;
   resolveNode: (id: string) => Node | null;
   resolveBreadcrumb: (id: string) => string;
   resolvePath: (id: string) => Node[];

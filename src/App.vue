@@ -30,6 +30,7 @@
         :on-rename="rename"
         :on-alias="aliasGroup"
         :on-remove-alias="removeAlias"
+        :on-rebase-alias="rebaseAlias"
         :resolve-node="resolveNode"
         :resolve-breadcrumb="resolveBreadcrumb"
         :resolve-path="resolvePath"
@@ -37,6 +38,7 @@
         :on-toggle-alias-ancestors="toggleAliasAncestors"
         :on-alias-tag-hide="hideAliasTag"
         :on-alias-tag-override="overrideAliasTag"
+        :on-alias-tag-reset="resetAliasOverride"
       />
     </section>
 
@@ -57,6 +59,7 @@
         :on-rename="rename"
         :on-alias="aliasGroup"
         :on-remove-alias="removeAlias"
+        :on-rebase-alias="rebaseAlias"
         :resolve-node="resolveNode"
         :resolve-breadcrumb="resolveBreadcrumb"
         :resolve-path="resolvePath"
@@ -64,6 +67,7 @@
         :on-toggle-alias-ancestors="toggleAliasAncestors"
         :on-alias-tag-hide="hideAliasTag"
         :on-alias-tag-override="overrideAliasTag"
+        :on-alias-tag-reset="resetAliasOverride"
       />
     </section>
 
@@ -82,6 +86,7 @@
         :on-rename="rename"
         :on-alias="aliasGroup"
         :on-remove-alias="removeAlias"
+        :on-rebase-alias="rebaseAlias"
         :resolve-node="resolveNode"
         :resolve-breadcrumb="resolveBreadcrumb"
         :resolve-path="resolvePath"
@@ -89,6 +94,7 @@
         :on-toggle-alias-ancestors="toggleAliasAncestors"
         :on-alias-tag-hide="hideAliasTag"
         :on-alias-tag-override="overrideAliasTag"
+        :on-alias-tag-reset="resetAliasOverride"
         :ancestor-toggle-id="'80'"
         :ancestors-open="showVidelAncestors"
         :on-toggle-ancestors="toggleVidelAncestors"
@@ -96,7 +102,7 @@
       />
     </section>
 
-    <div v-if="aliasTargetId" class="modal">
+    <div v-if="aliasTargetId || aliasRebaseId" class="modal">
       <div class="modal__overlay" @click="closeAliasModal"></div>
       <div class="modal__content">
         <header class="modal__header">
@@ -116,6 +122,7 @@
             :on-rename="rename"
             :on-alias="aliasGroup"
             :on-remove-alias="removeAlias"
+            :on-rebase-alias="rebaseAlias"
             :resolve-node="resolveNode"
             :resolve-breadcrumb="resolveBreadcrumb"
             :resolve-path="resolvePath"
@@ -123,6 +130,7 @@
             :on-toggle-alias-ancestors="toggleAliasAncestors"
             :on-alias-tag-hide="hideAliasTag"
             :on-alias-tag-override="overrideAliasTag"
+            :on-alias-tag-reset="resetAliasOverride"
             :selectable="true"
             :on-select-group="applyAlias"
           />
@@ -160,6 +168,7 @@ const videlRoot = computed(() => {
   return node ? [node] : [];
 });
 const aliasTargetId = ref<string | null>(null);
+const aliasRebaseId = ref<string | null>(null);
 const showVidelAncestors = ref(false);
 const openAliasAncestors = ref(new Set<string>());
 const toggleVidelAncestors = () => {
@@ -253,21 +262,47 @@ const aliasGroup = (id: string) => {
   aliasTargetId.value = id;
 };
 
+const rebaseAlias = (id: string) => {
+  aliasRebaseId.value = id;
+};
+
 const closeAliasModal = () => {
   aliasTargetId.value = null;
+  aliasRebaseId.value = null;
 };
 
 const applyAlias = (targetId: string) => {
-  if (!aliasTargetId.value) {
+  const targetAliasId = aliasTargetId.value ?? aliasRebaseId.value;
+  if (!targetAliasId) {
     return;
   }
-  const node = findNode(nodes.value, aliasTargetId.value);
+  const node = findNode(nodes.value, targetAliasId);
   const target = findNode(nodes.value, targetId);
   if (!node || node.type !== 'group' || !target || target.type !== 'group') {
     return;
   }
   if (node.id === target.id) {
     return;
+  }
+  if (aliasRebaseId.value) {
+    const path = findPathToNode(nodes.value, target.id) ?? [];
+    const pathIds = new Set(path.map((entry) => entry.id));
+    const pathTagIds = new Set(path.flatMap((entry) => entry.tags.map((tag) => tag.id)));
+    const orphanedTags = node.tags.filter(
+      (tag) => tag.aliasForGroupId && !pathIds.has(tag.aliasForGroupId)
+    );
+    const orphanedMasks = (node.hiddenTagIds ?? []).filter((tagId) => !pathTagIds.has(tagId));
+    if (orphanedTags.length || orphanedMasks.length) {
+      const proceed = window.confirm(
+        `Attention : certaines modifications ne s’appliqueront plus car elles sont hors du nouveau chemin.\n` +
+          `Tags hors chemin: ${orphanedTags.length}, masques hors chemin: ${orphanedMasks.length}.\n` +
+          `Elles seront conservées mais inactives tant que le chemin ne les contient pas.\n\n` +
+          `OK pour continuer, Annuler pour garder l’alias actuel.`
+      );
+      if (!proceed) {
+        return;
+      }
+    }
   }
   node.aliasOf = target.id;
   refresh();
@@ -328,6 +363,16 @@ const overrideAliasTag = (aliasId: string, tagId: string, targetGroupId: string)
     overrideId: overrideTag.id,
     name: nextName,
   });
+  refresh();
+};
+
+const resetAliasOverride = (aliasId: string, overrideId: string) => {
+  const node = findNode(nodes.value, aliasId);
+  if (!node || node.type !== 'group') {
+    return;
+  }
+  const next = node.tags.filter((tag) => tag.id !== overrideId);
+  node.tags = next;
   refresh();
 };
 </script>

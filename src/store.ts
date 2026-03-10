@@ -295,7 +295,7 @@ export const createSampleTree = (): TreeNode[] => [
             id: '82',
             name: '',
             type: 'group',
-            aliasOf: '7',
+            aliasOf: '5',
             tags: [],
             children: [],
           },

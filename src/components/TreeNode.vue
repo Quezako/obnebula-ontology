@@ -64,15 +64,15 @@
         </button>
         <button
           v-if="node.type === 'group' && node.aliasOf"
-          @click="onRemoveAlias(node.id)"
+          @click="onRebaseAlias(node.id)"
         >
-          Supprimer alias
+          Rebaser alias
         </button>
         <button v-if="node.type === 'tag'" @click="startEdit">Renommer</button>
         <button @click="onRemove(node.id)">Supprimer</button>
       </div>
       <div v-else class="node__actions">
-        <button v-if="node.type === 'group'" @click.stop="onSelectGroup?.(node.id)">
+        <button v-if="!hideActions && node.type === 'group'" @click.stop="onSelectGroup?.(node.id)">
           Sélectionner
         </button>
         <button
@@ -83,9 +83,16 @@
         </button>
         <template v-if="aliasContextId && node.type === 'tag'">
             <button
+              v-if="node.tagType !== 'Override'"
               @click.stop="onAliasTagOverride?.(aliasContextId, node.id, parent?.id ?? aliasContextId)"
             >
               Surcharger
+            </button>
+            <button
+              v-else
+              @click.stop="onAliasTagReset?.(aliasContextId, node.id)"
+            >
+              Rétablir
             </button>
             <button @click.stop="onAliasTagHide?.(aliasContextId, node.id)">
               {{ isTagHidden ? 'Afficher' : 'Masquer' }}
@@ -107,8 +114,10 @@
           :on-rename="onRename"
           :on-alias="onAlias"
           :on-remove-alias="onRemoveAlias"
+          :on-rebase-alias="onRebaseAlias"
           :on-alias-tag-hide="onAliasTagHide"
           :on-alias-tag-override="onAliasTagOverride"
+          :on-alias-tag-reset="onAliasTagReset"
           :resolve-node="resolveNode"
           :resolve-breadcrumb="resolveBreadcrumb"
           :resolve-path="resolvePath"
@@ -118,7 +127,7 @@
           :alias-context-id="node.id"
         />
       </div>
-      <div class="node__tags">
+      <div v-if="!hideAliasTags" class="node__tags">
         <button class="button button--ghost" @click="toggleTags">
           {{ tagsExpanded ? '▾' : '▸' }} Tags ({{ displayTags.length }})
         </button>
@@ -137,8 +146,10 @@
             :on-rename="onRename"
             :on-alias="onAlias"
             :on-remove-alias="onRemoveAlias"
+            :on-rebase-alias="onRebaseAlias"
             :on-alias-tag-hide="onAliasTagHide"
             :on-alias-tag-override="onAliasTagOverride"
+            :on-alias-tag-reset="onAliasTagReset"
             :resolve-node="resolveNode"
             :resolve-breadcrumb="resolveBreadcrumb"
             :resolve-path="resolvePath"
@@ -166,8 +177,10 @@
         :on-rename="onRename"
         :on-alias="onAlias"
         :on-remove-alias="onRemoveAlias"
+        :on-rebase-alias="onRebaseAlias"
         :on-alias-tag-hide="onAliasTagHide"
         :on-alias-tag-override="onAliasTagOverride"
+        :on-alias-tag-reset="onAliasTagReset"
         :resolve-node="resolveNode"
         :resolve-breadcrumb="resolveBreadcrumb"
         :resolve-path="resolvePath"
@@ -202,8 +215,10 @@ interface Props {
   onRename: (id: string, name: string) => void;
   onAlias: (id: string) => void;
   onRemoveAlias: (id: string) => void;
+  onRebaseAlias: (id: string) => void;
   onAliasTagHide?: (aliasId: string, tagId: string) => void;
   onAliasTagOverride?: (aliasId: string, tagId: string, targetGroupId: string) => void;
+  onAliasTagReset?: (aliasId: string, overrideId: string) => void;
   resolveNode: (id: string) => Node | null;
   resolveBreadcrumb: (id: string) => string;
   resolvePath: (id: string) => Node[];
@@ -275,9 +290,12 @@ const mergeAliasTags = (
   const additions = scoped.filter((tag) => tag.tagType !== 'Override');
   const ordered: Node[] = [];
   baseTags.forEach((baseTag) => {
-    ordered.push(baseTag);
     const matching = overrides.filter((tag) => tag.overrideFrom === baseTag.name);
-    ordered.push(...matching);
+    if (matching.length) {
+      ordered.push(matching[matching.length - 1]);
+    } else {
+      ordered.push(baseTag);
+    }
   });
   ordered.push(...additions);
   return ordered;
@@ -317,6 +335,8 @@ const tagSummary = computed(() => {
     })
     .join(', ');
 });
+
+const hideAliasTags = computed(() => props.node.type === 'group' && Boolean(props.node.aliasOf));
 
 const showAncestorToggle = computed(
   () => props.node.type === 'group' && props.ancestorToggleId === props.node.id
