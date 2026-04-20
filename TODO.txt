@@ -2,6 +2,7 @@
 - personnage Videl vide.
 - si on ajoute depuis l'abre entity human:female, il faut un moyen de sélectionner visuellement dans l'abre, pas jusyte saisir un id.
 - si on veut ensuite surcharger un attribut au dessus, par exemple dans human : 1_arm. il faut pouvori parcourir cette hierachie dnas le contexte de ce personnage.
+# Affichez le détail Des modifications de l'alias si celui ci est replié.
 --------------
 # quand on ajoute une nouveau groupe, il faut lui donner des tags principaux (en plus de leur type)
 # on ajoute ensuite des propriétés qui sont des tag group déjà existants.
