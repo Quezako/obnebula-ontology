@@ -1,4 +1,4 @@
-# Onebula Ontology
+# Obnebula Ontology
 
 Maquette statique (Vue 3) pour gérer une ontologie de groupes et tags avec drag & drop.
 
